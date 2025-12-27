@@ -185,28 +185,57 @@ initializeSkills();
 
 // Dynamic Certification Count
 const updateCertificationCount = () => {
-    const totalCerts = document.querySelectorAll('#certifications-grid > div').length;
-    const certCountElement = document.querySelector('.text-center.animate-on-scroll h4');
+    const allCerts = document.querySelectorAll('#certifications-grid > div');
     
+    // Count all certifications (including hidden ones, including hackathons)
+    const certsCount = allCerts.length;
+    
+    const certCountElement = document.getElementById('cert-count');
     if (certCountElement) {
-        certCountElement.textContent = `${totalCerts}`;
+        certCountElement.textContent = `${certsCount}`;
     }
     
-    // Update Courses Completed to match Certifications
-    const projectCountElements = document.querySelectorAll('.text-center.animate-on-scroll h4');
-    if (projectCountElements.length >= 2) {
-        projectCountElements[1].textContent = `${totalCerts}`;
+    // Update Courses Completed (excluding hackathons, including hidden)
+    let coursesCount = 0;
+    allCerts.forEach(cert => {
+        const title = cert.querySelector('h3');
+        if (title && !title.textContent.toLowerCase().includes('hackathon')) {
+            coursesCount++;
+        }
+    });
+    
+    const coursesCountElement = document.getElementById('courses-count');
+    if (coursesCountElement) {
+        coursesCountElement.textContent = `${coursesCount}`;
     }
 };
 
 // Dynamic Projects Count
 const updateProjectsCount = () => {
     const totalProjects = document.querySelectorAll('#projects-grid > div').length;
-    const projectCountElements = document.querySelectorAll('.text-center.animate-on-scroll h4');
+    const projectCountElement = document.getElementById('projects-count');
     
-    // Find the Projects Completed stat (3rd element)
-    if (projectCountElements.length >= 3) {
-        projectCountElements[2].textContent = `${totalProjects}`;
+    if (projectCountElement) {
+        projectCountElement.textContent = `${totalProjects}`;
+    }
+};
+
+// Dynamic Hackathons Count
+const updateHackathonCount = () => {
+    const allCerts = document.querySelectorAll('#certifications-grid > div');
+    let hackathonCount = 0;
+    
+    // Count all hackathons (including hidden ones)
+    allCerts.forEach(cert => {
+        const title = cert.querySelector('h3');
+        if (title && title.textContent.toLowerCase().includes('hackathon')) {
+            hackathonCount++;
+        }
+    });
+    
+    const hackathonCountElement = document.getElementById('hackathon-count');
+    if (hackathonCountElement) {
+        hackathonCountElement.textContent = `${hackathonCount}`;
     }
 };
 
@@ -214,6 +243,7 @@ const updateProjectsCount = () => {
 window.addEventListener('load', () => {
     updateCertificationCount();
     updateProjectsCount();
+    updateHackathonCount();
 });
 
 // Observe skill items for bar animation
@@ -404,6 +434,62 @@ if (toggleProjectsBtn && hiddenProjects.length > 0) {
     });
 }
 
+// Toggle Experience Show More/Less
+const toggleExperienceBtn = document.getElementById('toggle-experience-btn');
+const allExperiences = document.querySelectorAll('.experience-item');
+const hiddenExperiences = Array.from(allExperiences).slice(4); // Hide after 4th item
+
+if (toggleExperienceBtn) {
+    // Hide experiences after the 4th one
+    hiddenExperiences.forEach(exp => {
+        exp.classList.add('experience-item-hidden');
+        exp.style.display = 'none';
+    });
+
+    // Hide button if there are no hidden experiences (4 or fewer total)
+    if (hiddenExperiences.length === 0) {
+        toggleExperienceBtn.style.display = 'none';
+    }
+}
+
+if (toggleExperienceBtn && hiddenExperiences.length > 0) {
+    let experienceExpanded = false;
+    
+    toggleExperienceBtn.addEventListener('click', () => {
+        experienceExpanded = !experienceExpanded;
+        
+        // Get current active year filter
+        const activeYearBtn = document.querySelector('.experience-filter-btn.active');
+        const activeYear = activeYearBtn ? activeYearBtn.getAttribute('data-year') : 'all';
+        
+        hiddenExperiences.forEach(exp => {
+            const matchesYear = activeYear === 'all' || exp.getAttribute('data-year') === activeYear;
+            
+            if (experienceExpanded && matchesYear) {
+                exp.style.display = 'block';
+                setTimeout(() => {
+                    exp.classList.add('show');
+                }, 10);
+            } else {
+                exp.classList.remove('show');
+                setTimeout(() => {
+                    exp.style.display = 'none';
+                }, 300);
+            }
+        });
+        
+        // Update button text and icon
+        const icon = toggleExperienceBtn.querySelector('i');
+        if (experienceExpanded) {
+            icon.className = 'fas fa-chevron-up mr-2';
+            toggleExperienceBtn.innerHTML = '<i class="fas fa-chevron-up mr-2"></i> Show Less Experience';
+        } else {
+            icon.className = 'fas fa-chevron-down mr-2';
+            toggleExperienceBtn.innerHTML = '<i class="fas fa-chevron-down mr-2"></i> Show More Experience';
+        }
+    });
+}
+
 // Toggle Certifications Show More/Less
 const toggleCertsBtn = document.getElementById('toggle-certs-btn');
 const hiddenCerts = document.querySelectorAll('.cert-item-hidden');
@@ -437,6 +523,7 @@ if (toggleCertsBtn && hiddenCerts.length > 0) {
         
         // Update certification count
         updateCertificationCount();
+        updateHackathonCount();
         
         // Update button text and icon
         const icon = toggleCertsBtn.querySelector('i');
@@ -460,3 +547,142 @@ window.addEventListener('error', (e) => {
         console.warn('Image failed to load:', e.target.src);
     }
 }, true);
+
+// Experience Year Filter
+const experienceFilterBtns = document.querySelectorAll('.experience-filter-btn');
+const experienceItems = document.querySelectorAll('.experience-item');
+
+experienceFilterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const year = btn.getAttribute('data-year');
+        
+        // Update active button
+        experienceFilterBtns.forEach(b => {
+            b.classList.remove('active', 'bg-gradient-to-r', 'from-cyan-500', 'to-blue-600', 'text-white');
+            b.classList.add('bg-gray-800', 'text-gray-300');
+        });
+        btn.classList.remove('bg-gray-800', 'text-gray-300');
+        btn.classList.add('active', 'bg-gradient-to-r', 'from-cyan-500', 'to-blue-600', 'text-white');
+        
+        // Get the expanded state from the toggle button
+        const experienceExpanded = toggleExperienceBtn && hiddenExperiences.length > 0 ? 
+            toggleExperienceBtn.innerHTML.includes('Show Less') : true;
+        
+        // Filter experience items
+        experienceItems.forEach((item, index) => {
+            const matchesYear = year === 'all' || item.getAttribute('data-year') === year;
+            const shouldHide = !experienceExpanded && index >= 4; // Hide after 4th item if not expanded
+            
+            if (matchesYear && !shouldHide) {
+                item.style.display = 'block';
+                setTimeout(() => {
+                    item.classList.add('show');
+                }, 10);
+            } else {
+                item.classList.remove('show');
+                setTimeout(() => {
+                    item.style.display = 'none';
+                }, 300);
+            }
+        });
+        
+        // Update toggle button visibility based on filtered results
+        if (toggleExperienceBtn) {
+            const visibleCount = Array.from(experienceItems).filter((item, index) => {
+                return (year === 'all' || item.getAttribute('data-year') === year) && index < 4;
+            }).length;
+            const totalCount = Array.from(experienceItems).filter(item => 
+                year === 'all' || item.getAttribute('data-year') === year
+            ).length;
+            
+            // Show button only if there are more than 4 items to display
+            if (totalCount > 4) {
+                toggleExperienceBtn.style.display = 'inline-flex';
+            } else {
+                toggleExperienceBtn.style.display = 'none';
+            }
+        }
+    });
+});
+
+// Certifications Year Filter
+const certFilterBtns = document.querySelectorAll('.cert-filter-btn');
+const certItems = document.querySelectorAll('.cert-item');
+
+certFilterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const year = btn.getAttribute('data-year');
+        
+        // Update active button
+        certFilterBtns.forEach(b => {
+            b.classList.remove('active', 'bg-gradient-to-r', 'from-cyan-500', 'to-blue-600', 'text-white');
+            b.classList.add('bg-gray-800', 'text-gray-300');
+        });
+        btn.classList.remove('bg-gray-800', 'text-gray-300');
+        btn.classList.add('active', 'bg-gradient-to-r', 'from-cyan-500', 'to-blue-600', 'text-white');
+        
+        // Filter certification items
+        certItems.forEach(item => {
+            if (year === 'all' || item.getAttribute('data-year') === year) {
+                item.classList.remove('hidden');
+                setTimeout(() => {
+                    item.classList.add('show');
+                }, 10);
+            } else {
+                item.classList.remove('show');
+                setTimeout(() => {
+                    item.classList.add('hidden');
+                }, 300);
+            }
+        });
+        
+        // Update stats based on filtered items
+        setTimeout(() => {
+            updateFilteredStats(year);
+        }, 350);
+    });
+});
+
+// Update stats based on filtered year
+const updateFilteredStats = (year) => {
+    const allCerts = document.querySelectorAll('#certifications-grid > div');
+    let totalCerts = 0;
+    let coursesCount = 0;
+    let hackathonCount = 0;
+    
+    allCerts.forEach(cert => {
+        const certYear = cert.getAttribute('data-year');
+        const title = cert.querySelector('h3');
+        
+        // Only count items matching the filter (or all if year is 'all')
+        if (year === 'all' || certYear === year) {
+            totalCerts++;
+            
+            // Count courses (excluding hackathons)
+            if (title && !title.textContent.toLowerCase().includes('hackathon')) {
+                coursesCount++;
+            }
+            
+            // Count hackathons
+            if (title && title.textContent.toLowerCase().includes('hackathon')) {
+                hackathonCount++;
+            }
+        }
+    });
+    
+    // Update all stat displays
+    const certCountElement = document.getElementById('cert-count');
+    if (certCountElement) {
+        certCountElement.textContent = `${totalCerts}`;
+    }
+    
+    const coursesCountElement = document.getElementById('courses-count');
+    if (coursesCountElement) {
+        coursesCountElement.textContent = `${coursesCount}`;
+    }
+    
+    const hackathonCountElement = document.getElementById('hackathon-count');
+    if (hackathonCountElement) {
+        hackathonCountElement.textContent = `${hackathonCount}`;
+    }
+};
