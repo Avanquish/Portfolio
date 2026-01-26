@@ -258,42 +258,59 @@ const formMessage = document.getElementById('form-message');
 contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Get form data
-    const formData = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        subject: document.getElementById('subject').value,
-        message: document.getElementById('message').value
-    };
-    
     // Show loading state
     const submitBtn = contactForm.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.innerHTML = '<span class="loading"></span> Sending...';
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
     submitBtn.disabled = true;
     
-    // Simulate form submission (replace with actual API call)
-    setTimeout(() => {
-        // Reset form
-        contactForm.reset();
+    // Submit to Netlify
+    try {
+        const formData = new FormData(contactForm);
         
-        // Show success message
-        formMessage.textContent = 'Thank you! Your message has been sent successfully.';
-        formMessage.className = 'mt-4 text-center text-green-600 font-semibold';
+        const response = await fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(formData).toString()
+        });
+        
+        if (response.ok) {
+            // Reset form
+            contactForm.reset();
+            
+            // Show success message
+            formMessage.textContent = 'Thank you! Your message has been sent successfully.';
+            formMessage.className = 'mt-4 text-center text-green-400 font-semibold';
+            formMessage.classList.remove('hidden');
+            
+            // Reset button
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                formMessage.classList.add('hidden');
+            }, 5000);
+        } else {
+            throw new Error('Form submission failed');
+        }
+    } catch (error) {
+        // Show error message
+        formMessage.textContent = 'Oops! Something went wrong. Please try again.';
+        formMessage.className = 'mt-4 text-center text-red-400 font-semibold';
         formMessage.classList.remove('hidden');
         
         // Reset button
-        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
         
         // Hide message after 5 seconds
         setTimeout(() => {
             formMessage.classList.add('hidden');
         }, 5000);
-    }, 2000);
+    }
     
-    // For actual implementation, use fetch or axios:
-    /*
+    /* Old simulated code - now using real Netlify Forms:
     try {
         const response = await fetch('your-api-endpoint', {
             method: 'POST',
