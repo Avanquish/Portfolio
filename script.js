@@ -565,6 +565,46 @@ window.addEventListener('error', (e) => {
     }
 }, true);
 
+// Dynamically Generate Experience Year Filter Buttons
+const generateExperienceYearFilters = () => {
+    const experienceItems = document.querySelectorAll('.experience-item');
+    const filtersContainer = document.getElementById('experience-year-filters');
+    
+    if (!filtersContainer || experienceItems.length === 0) return;
+    
+    // Collect unique years from experience items
+    const years = new Set();
+    experienceItems.forEach(item => {
+        const year = item.getAttribute('data-year');
+        if (year) years.add(year);
+    });
+    
+    // Sort years in descending order
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    
+    // Clear existing buttons
+    filtersContainer.innerHTML = '';
+    
+    // Create "All Years" button
+    const allBtn = document.createElement('button');
+    allBtn.className = 'experience-filter-btn active bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-cyan-600 hover:to-blue-700 transition shadow-lg font-semibold border border-cyan-400/50';
+    allBtn.setAttribute('data-year', 'all');
+    allBtn.textContent = 'All Years';
+    filtersContainer.appendChild(allBtn);
+    
+    // Create year buttons
+    sortedYears.forEach(year => {
+        const btn = document.createElement('button');
+        btn.className = 'experience-filter-btn bg-gray-800 text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-700 transition border border-cyan-500/30';
+        btn.setAttribute('data-year', year);
+        btn.textContent = year;
+        filtersContainer.appendChild(btn);
+    });
+};
+
+// Call the function to generate buttons
+generateExperienceYearFilters();
+
 // Experience Year Filter
 const experienceFilterBtns = document.querySelectorAll('.experience-filter-btn');
 const experienceItems = document.querySelectorAll('.experience-item');
